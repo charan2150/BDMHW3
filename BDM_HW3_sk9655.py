@@ -33,9 +33,6 @@ spark
 import sys
 
 if __name__=='__main__':
-    
-    sc.textFile(sys.argv[1] if len(sys.argv)>1 else 'book.txt').saveAsTextFile(sys.argv[2] if len(sys.argv)>2 else 'output')
-
         item = 'keyfood_sample_items.csv'
         product = 'keyfood_products.csv'
         foodInsecurity = 'keyfood_nyc_stores.json'
