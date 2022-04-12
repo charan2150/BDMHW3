@@ -1,7 +1,3 @@
-!curl -L "https://drive.google.com/uc?id=1O1U_t-cpmValVK2mjdTzcFxIbGw05vOw&confirm=t" > keyfood_sample_items.csv
-!curl -L "https://drive.google.com/uc?id=1YUBKrtNV3QUz1RutMnMbJdQj7rv-Lkd5&confirm=t" > keyfood_nyc_stores.json
-!curl -L "https://drive.google.com/uc?id=1f79oETtvN3NQLYPnVGhurE1UBDP4IQP-&confirm=t" > keyfood_products.csv
-!pip install pyspark
 import csv
 import json
 import numpy as np
@@ -34,50 +30,58 @@ sc = pyspark.SparkContext.getOrCreate()
 spark = SparkSession(sc)
 spark
 
-item = 'keyfood_sample_items.csv'
-product = 'keyfood_products.csv'
-foodInsecurity = 'keyfood_nyc_stores.json'
+import sys
 
-dfkeyfood_items = spark.read.load(item, format='csv', header=True, inferSchema=True)
+if __name__=='__main__':
+    
+    sc.textFile(sys.argv[1] if len(sys.argv)>1 else 'book.txt').saveAsTextFile(sys.argv[2] if len(sys.argv)>2 else 'output')
 
-dfkeyfood_items = dfkeyfood_items.withColumn("upc_code", split(dfkeyfood_items['UPC Code'], "-").getItem(1))
+        item = 'keyfood_sample_items.csv'
+        product = 'keyfood_products.csv'
+        foodInsecurity = 'keyfood_nyc_stores.json'
 
-dfkeyfood_product = spark.read.load(product, format='csv', header=True, inferSchema=True)
+        dfkeyfood_items = spark.read.load(item, format='csv', header=True, inferSchema=True)
 
-dfkeyfood_product = dfkeyfood_product.withColumn('price_01',split(dfkeyfood_product['price'], "\xa0").getItem(0))
+        dfkeyfood_items = dfkeyfood_items.withColumn("upc_code", split(dfkeyfood_items['UPC Code'], "-").getItem(1))
 
-dfkeyfood_product = dfkeyfood_product.withColumn('price_02',substring('price_01', 2, 5))
+        dfkeyfood_product = spark.read.load(product, format='csv', header=True, inferSchema=True)
 
-dfkeyfood_product = dfkeyfood_product.drop("price","price_01")
-dfkeyfood_product = dfkeyfood_product.select('store','department','upc','product','size',dfkeyfood_product['price_02']\
-                                             .alias('price').cast('float'))
+        dfkeyfood_product = dfkeyfood_product.withColumn('price_01',split(dfkeyfood_product['price'], "\xa0").getItem(0))
 
-dfkeyfood_product = dfkeyfood_product.withColumn("upc_code01", split(dfkeyfood_product.upc, "-").getItem(1))
+        dfkeyfood_product = dfkeyfood_product.withColumn('price_02',substring('price_01', 2, 5))
 
-df = dfkeyfood_product.join(dfkeyfood_items,dfkeyfood_product.upc_code01==dfkeyfood_items.upc_code,how="inner")
+        dfkeyfood_product = dfkeyfood_product.drop("price","price_01")
+        dfkeyfood_product = dfkeyfood_product.select('store','department','upc','product','size',dfkeyfood_product['price_02']\
+                                                     .alias('price').cast('float'))
 
-df = df.select("store", "product","price","upc_code","department")
+        dfkeyfood_product = dfkeyfood_product.withColumn("upc_code01", split(dfkeyfood_product.upc, "-").getItem(1))
 
-dfStorelist = df.select(df['store']).distinct()
-store_list = []
-for col in dfStorelist.collect():
-  store_list.append(col[0])
-json_df = spark.read.json(foodInsecurity, multiLine=True)
+        df = dfkeyfood_product.join(dfkeyfood_items,dfkeyfood_product.upc_code01==dfkeyfood_items.upc_code,how="inner")
 
-df_list=[]
+        df = df.select("store", "product","price","upc_code","department")
 
-for storeName in store_list:
-  appendlist = json_df.select("{}.*".format(storeName)).select("name", "foodInsecurity")
-  df_list.append(appendlist)
+        dfStorelist = df.select(df['store']).distinct()
+        store_list = []
+        for col in dfStorelist.collect():
+          store_list.append(col[0])
+        json_df = spark.read.json(foodInsecurity, multiLine=True)
 
-dfList = reduce(DataFrame.unionAll, df_list)
+        df_list=[]
 
-df = df.join(dfList,df.store==dfList.name,how="inner")
+        for storeName in store_list:
+          appendlist = json_df.select("{}.*".format(storeName)).select("name", "foodInsecurity")
+          df_list.append(appendlist)
 
-outputTask1 = df.select(df['product'].alias('Item Name'),df['price'].alias('Price ($)'),df['foodInsecurity'].cast('float'))
+        dfList = reduce(DataFrame.unionAll, df_list)
 
-outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
+        df = df.join(dfList,df.store==dfList.name,how="inner")
 
-## DO NOT EDIT BELOW
-outputTask1 = outputTask1.cache()
-outputTask1.count()
+        outputTask1 = df.select(df['product'].alias('Item Name'),df['price'].alias('Price ($)'),df['foodInsecurity'].cast('float'))
+
+        outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
+        outputTask1.saveAsTextFile(sys.argv[2] if len(sys.argv)>2 else 'output')
+        
+
+
+
+
