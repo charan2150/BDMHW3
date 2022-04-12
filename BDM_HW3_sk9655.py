@@ -76,6 +76,7 @@ if __name__=='__main__':
         outputTask1 = df.select(df['product'].alias('Item Name'),df['price'].alias('Price ($)'),df['foodInsecurity'].cast('float'))
 
         outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
+        outputTask1.write.format("csv").save("output3.csv")
         outputTask1.saveAsTextFile(sys.argv[2] if len(sys.argv)>2 else 'output')
         
 
