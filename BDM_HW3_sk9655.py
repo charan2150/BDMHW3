@@ -5,10 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import IPython
-%matplotlib inline
-IPython.display.set_matplotlib_formats('svg')
-pd.plotting.register_matplotlib_converters()
-sns.set_style("whitegrid")
+
 
 import pyspark
 from pyspark.sql import SparkSession
