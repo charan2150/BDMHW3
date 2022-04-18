@@ -73,8 +73,8 @@ if __name__=='__main__':
         outputTask1 = df.select(df['product'].alias('Item Name'),df['price'].alias('Price ($)'),df['foodInsecurity'].cast('float'))
 
         outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
-        outtask =outputTask1.cache()
-        outtask.write.csv(sys.argv[1])
+        outputTask1 = outputTask1.rdd.map(lambda x: (x[0],x[1],x[2])).cache()
+        outputTask1.saveAsTextFile(sys.argv[1])
         
         
         
