@@ -74,7 +74,7 @@ if __name__=='__main__':
 
         outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
         outtask =outputTask1.cache()
-        outtask.saveAsTextFile(sys.argv[1])
+        outtask.write.csv(sys.argv[1])
         
         
         
