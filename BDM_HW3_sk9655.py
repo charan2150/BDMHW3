@@ -73,7 +73,8 @@ if __name__=='__main__':
         outputTask1 = df.select(df['product'].alias('Item Name'),df['price'].alias('Price ($)'),df['foodInsecurity'].cast('float'))
 
         outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
-        outputTask1.saveAsTextFile(sys.argv[1] if len(sys.argv)>1 else 'output')
+        outtask =outputTask1.cache()
+        outtask.saveAsTextFile(sys.argv[1])
         
         
         
