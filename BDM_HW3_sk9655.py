@@ -23,13 +23,14 @@ conf = (conf.setMaster('local[*]')
         .set('spark.driver.memory', '45G')
         .set('spark.driver.maxResultSize', '25G'))
 sc = SparkContext(conf=conf)
-sc = pyspark.SparkContext.getOrCreate()
-spark = SparkSession(sc)
+
 spark
 
 import sys
 
 if __name__=='__main__':
+        sc = pyspark.SparkContext.getOrCreate()
+        spark = SparkSession(sc)
         item = 'keyfood_sample_items.csv'
         product = 'keyfood_products.csv'
         foodInsecurity = 'keyfood_nyc_stores.json'
@@ -73,8 +74,10 @@ if __name__=='__main__':
         outputTask1 = df.select(df['product'].alias('Item Name'),df['price'].alias('Price ($)'),df['foodInsecurity'].cast('float'))
 
         outputTask1 = outputTask1.withColumn('% Food Insecurity', (outputTask1.foodInsecurity*100).cast('int')).drop("foodInsecurity")
-        outputTask1 = outputTask1.rdd.map(lambda x: (x[0],x[1],x[2])).cache()
-        outputTask1.saveAsTextFile(sys.argv[1])
+        
+        outputTask1.write.csv(sys.argv[1])
+        #outputTask1 = outputTask1.rdd.map(lambda x: (x[0],x[1],x[2])).cache()
+        #outputTask1.saveAsTextFile(sys.argv[1])
         
         
         
